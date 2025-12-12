@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Libro from '@/models/Libro';
+import connectDB from "@/lib/mongodb";
+import Libro from "@/models/Libro";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -16,20 +16,30 @@ export async function GET() {
       ratingPromedioResult,
     ] = await Promise.all([
       Libro.countDocuments(),
-      Libro.aggregate([{ $group: { _id: null, total: { $sum: '$prestamos' } } }]),
-      Libro.aggregate([{ $group: { _id: null, total: { $sum: '$disponibles' } } }]),
       Libro.aggregate([
-        { $group: { _id: '$categoria', cantidad: { $sum: 1 } } },
-        { $project: { nombre: '$_id', cantidad: 1, _id: 0 } },
+        { $group: { _id: null, total: { $sum: "$prestamos" } } },
+      ]),
+      Libro.aggregate([
+        { $group: { _id: null, total: { $sum: "$disponibles" } } },
+      ]),
+      Libro.aggregate([
+        { $group: { _id: "$categoria", cantidad: { $sum: 1 } } },
+        { $project: { nombre: "$_id", cantidad: 1, _id: 0 } },
         { $sort: { cantidad: -1 } },
       ]),
-      Libro.find().sort({ prestamos: -1 }).limit(5).select('titulo prestamos').lean(),
+      Libro.find()
+        .sort({ prestamos: -1 })
+        .limit(5)
+        .select("titulo prestamos")
+        .lean(),
       Libro.aggregate([
-        { $group: { _id: '$idioma', cantidad: { $sum: 1 } } },
-        { $project: { idioma: '$_id', cantidad: 1, _id: 0 } },
+        { $group: { _id: "$idioma", cantidad: { $sum: 1 } } },
+        { $project: { idioma: "$_id", cantidad: 1, _id: 0 } },
         { $sort: { cantidad: -1 } },
       ]),
-      Libro.aggregate([{ $group: { _id: null, promedio: { $avg: '$rating' } } }]),
+      Libro.aggregate([
+        { $group: { _id: null, promedio: { $avg: "$rating" } } },
+      ]),
     ]);
 
     const estadisticas = {
@@ -45,10 +55,17 @@ export async function GET() {
       ratingPromedio: ratingPromedioResult[0]?.promedio || 0,
     };
 
-    return NextResponse.json({ success: true, data: estadisticas }, { status: 200 });
-  } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al obtener estadísticas' },
+      { success: true, data: estadisticas },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error al obtener estadísticas:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Error al obtener estadísticas",
+      },
       { status: 500 }
     );
   }
