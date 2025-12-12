@@ -1,5 +1,9 @@
+import * as dotenv from "dotenv";
 import mongoose from "mongoose";
 import Libro from "../models/Libro";
+
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
